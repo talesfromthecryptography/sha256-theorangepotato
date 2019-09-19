@@ -54,7 +54,7 @@ static const uint32_t init_digest[SHA256_DIGEST_SIZE] = {
 
 /*********************** Implementations ***********************/
 
-void sha256_transform(SHA256_state *state, const uint32_t data[])
+void sha256_transform(sha256_state *state)
 {
 
   // Improve the efficiency of this code.
@@ -67,7 +67,7 @@ void sha256_transform(SHA256_state *state, const uint32_t data[])
   uint8_t  i;
 
 	for (i = 0; i < 16; ++i)
-		w[i] = data[i];
+		w[i] = state->buffer[i];
 	for ( ; i < 64; ++i)
 		w[i] = SIG1(w[i - 2]) + w[i - 7] + SIG0(w[i - 15]) + w[i - 16];
 
@@ -114,7 +114,7 @@ void sha256_init(sha256_state *state)
   	state->digest[i] = init_digest[i];
 }
 
-void sha256_update(sha256_state *state, const uint8_t data[], size_t len)
+void sha256_update(sha256_state *state, const uint8_t data[], int len)
 {
 	int i;
 
@@ -123,7 +123,7 @@ void sha256_update(sha256_state *state, const uint8_t data[], size_t len)
     
 		state->buffer_bytes_used++;
 		if (state->buffer_bytes_used == BUFFER_FULL) {
-			sha256_transform(state, data);
+			sha256_transform(state);
 			state->bit_len += 512;
 			state->buffer_bytes_used = 0;
 		}
