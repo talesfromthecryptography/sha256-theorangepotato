@@ -7,7 +7,7 @@
 * Implementation of the SHA-256 hashing algorithm.
 * SHA-256 is one of the three algorithms in the SHA2
 * specification:
-* http://csrc.nist.gov/publications/fips/fips180-2/fips180-2withchangenotice.pdf
+* https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
 *
 *********************************************************************/
 
