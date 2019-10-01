@@ -116,9 +116,10 @@ void sha256_init(sha256_state *state)
 void sha256_update(sha256_state *state, const uint8_t data[], int len)
 {
 	int i;
-
 	for (i = 0; i < len; ++i) {
-		// Add data[i] to the buffer
+		uint8_t shift_amount = 3 - (state->buffer_bytes_used % 4);
+		shift_amount *= 8;
+		state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFFFF << shift_amount)) | ((uint32_t)data[i] << shift_amount);
     
 		state->buffer_bytes_used++;
 		if (state->buffer_bytes_used == BUFFER_FULL) {
