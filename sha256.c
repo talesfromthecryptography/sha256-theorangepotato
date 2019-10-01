@@ -132,8 +132,38 @@ void sha256_update(sha256_state *state, const uint8_t data[], int len)
 
 void sha256_final(sha256_state *state, uint8_t hash[])
 {	
-	// Pad the buffer.
-  // Transform
-  // If latest buffer could not fit state->bit_len, build final buffer and transform
-	// Copy state->digest to hash
+	state->bit_len += state->buffer_bytes_used * 8;
+	uint8_t shift_amount = 3 - (state->buffer_bytes_used % 4);
+	shift_amount *= 8;
+	if (state->buffer_bytes_used + 9 > BUFFER_FULL) {
+		state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFFFF << shift_amount)) | ((uint32_t)(0x80) << shift_amount);
+		state->buffer_bytes_used += shift_amount;
+		while(state->buffer_bytes_used < BUFFER_FULL - 8) {
+			state->buffer[(state->buffer_bytes_used + 3)/ 4] = 0;
+			state->buffer_bytes_used += 4;
+		}
+		sha256_transform(state);
+		state->buffer_bytes_used = 0;
+	} else {
+		state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFFFF << shift_amount)) | ((uint32_t)(0x80) << shift_amount);
+		state->buffer_bytes_used += shift_amount;
+	}
+	while(state->buffer_bytes_used < BUFFER_FULL - 8) {
+		state->buffer[(state->buffer_bytes_used + 3)/ 4] = 0;
+		state->buffer_bytes_used += 4;
+	}
+	state->buffer[SHA256_BUFFER_SIZE - 2] = (uint32_t)(state->bit_len >> 32);
+	state->buffer[SHA256_BUFFER_SIZE - 1] = (uint32_t)(state->bit_len);
+	state->buffer_bytes_used = BUFFER_FULL;
+
+	sha256_transform(state);
+
+	int i;
+	for (i = 0; i < SHA256_DIGEST_SIZE; i++) {
+		uint8_t offset = i * 4;
+		hash[offset] = (uint8_t)(state->digest[i] >> 24);
+		hash[offset + 1] = (uint8_t)(state->digest[i] >> 16);
+		hash[offset + 2] = (uint8_t)(state->digest[i] >> 8);
+		hash[offset + 3] = (uint8_t)state->digest[i];
+	}
 }
