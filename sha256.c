@@ -20,7 +20,7 @@
 
 #define ROTRIGHT(a,b) (((a) >> (b)) | ((a) << (32-(b))))
 
-#define CH(x,y,z) (((x) & (y)) | (~(x) & (z)))
+#define CH(x,y,z) (((x) & (y)) ^ (~(x) & (z)))
 #define MAJ(x,y,z) (((x) & (y)) ^ ((y) & (z)) ^ ((z) & (x)))
 #define EP0(x) (ROTRIGHT(x,2) ^ ROTRIGHT(x,13) ^ ROTRIGHT(x,22))
 #define EP1(x) (ROTRIGHT(x,6) ^ ROTRIGHT(x,11) ^ ROTRIGHT(x,25))
@@ -57,12 +57,12 @@ static const uint32_t init_digest[SHA256_DIGEST_SIZE] = {
 void sha256_transform(sha256_state *state)
 {
 
-  // Improve the efficiency of this code.
-  //  1. Reduce memory usage by re-cycling w values
-  //  2. Find a way to reduce copying (lines 83-90)
-  //  
-  //  Consider re-ordering some code
-  // 
+  /* Improve the efficiency of this code.
+    1. Reduce memory usage by re-cycling w values
+    2. Find a way to reduce copying (lines 83-90)
+    
+    Consider re-ordering some code
+  */ 
 	uint32_t a, b, c, d, e, f, g, h, t1, t2, w[NUM_ROUNDS];
   uint8_t  i;
 
@@ -105,11 +105,10 @@ void sha256_transform(sha256_state *state)
 
 void sha256_init(sha256_state *state)
 {
-  int i;
-
 	state->buffer_bytes_used = 0;
 	state->bit_len = 0;
 
+  int i;
   for (i=0; i<SHA256_DIGEST_SIZE; i++)
   	state->digest[i] = init_digest[i];
 }
