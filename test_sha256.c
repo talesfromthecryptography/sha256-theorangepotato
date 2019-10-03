@@ -1,5 +1,5 @@
 /*********************************************************************
-* Filename:   sha256_test.h
+* Filename:   test_sha256.h
 * Authors: Austin Bohannon and Dr. Andrew Moshier
 * Copyright: 2019
 * Disclaimer: This code is presented "as is" without any guarantees.
