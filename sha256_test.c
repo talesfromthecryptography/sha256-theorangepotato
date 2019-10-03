@@ -1,6 +1,16 @@
-#include "sha256.h"
-#include <stdio.h>
+/*********************************************************************
+* Filename:   sha256_test.h
+* Authors: Austin Bohannon and Dr. Andrew Moshier
+* Copyright: 2019
+* Disclaimer: This code is presented "as is" without any guarantees.
+* Details: Implements tests for sha256 
+*********************************************************************/
 
+/*************************** HEADER FILES ***************************/
+#include <stdio.h>
+#include "sha256.h"
+
+/*********************** Implementations ***********************/
 int assert_equal_hash(uint8_t * computed_hash, uint8_t * known_hash) {
     int i;
     for (i = 0; i < 32; i++) {

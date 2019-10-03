@@ -1,8 +1,8 @@
 
 /*********************************************************************
 * Filename:   sha256.h
-* Author:     
-* Copyright:
+* Authors: Austin Bohannon and Dr. Andrew Moshier
+* Copyright: 2019
 * Disclaimer: This code is presented "as is" without any guarantees.
 * Details:    Defines the API for the corresponding SHA1 implementation.
 *********************************************************************/

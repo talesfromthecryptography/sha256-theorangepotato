@@ -1,7 +1,7 @@
 /*********************************************************************
 * Filename:   sha256.c
-* Author:     
-* Copyright:
+* Authors: Austin Bohannon and Dr. Andrew Moshier
+* Copyright: 2019
 * Disclaimer: This code is presented "as is" without any guarantees.
 *
 * Implementation of the SHA-256 hashing algorithm.
@@ -100,12 +100,13 @@ void sha256_init(sha256_state *state)
 void sha256_update(sha256_state *state, const uint8_t data[], int len)
 {
 	int i;
+	uint8_t shift_amount;
 	for (i = 0; i < len; ++i) {
-		uint8_t shift_amount = 3 - (state->buffer_bytes_used % 4);
-		shift_amount *= 8;
+		shift_amount = 3 - (state->buffer_bytes_used % 4); /* bytes */
+		shift_amount *= 8; /* bits */
 		state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFFFF << shift_amount)) | ((uint32_t)data[i] << shift_amount);
-    
 		state->buffer_bytes_used++;
+
 		if (state->buffer_bytes_used == BUFFER_FULL) {
 			sha256_transform(state);
 			state->bit_len += 512;
@@ -116,32 +117,39 @@ void sha256_update(sha256_state *state, const uint8_t data[], int len)
 
 void sha256_final(sha256_state *state, uint8_t hash[])
 {	
-	state->bit_len += state->buffer_bytes_used * 8;
 	uint8_t shift_bytes = 3 - (state->buffer_bytes_used % 4);
 	uint8_t shift_bits = shift_bytes * 8;
-	if (state->buffer_bytes_used + 9 > 64) {
-		state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFFFF << shift_bits)) | ((uint32_t)(0x80) << shift_bits);
-		state->buffer_bytes_used += shift_bytes + 1;
+
+	state->bit_len += state->buffer_bytes_used * 8;
+
+	/* Append a 1-bit for padding */
+	state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFFFF << shift_bits)) | ((uint32_t)(0x80) << shift_bits);
+	state->buffer_bytes_used += shift_bytes + 1;
+
+	/* The padding will overflow the buffer */
+	if (state->buffer_bytes_used + 8 > 64) {
 		while(state->buffer_bytes_used < 64) {
 			state->buffer[(state->buffer_bytes_used + 3)/ 4] = 0;
 			state->buffer_bytes_used += 4;
 		}
 		sha256_transform(state);
 		state->buffer_bytes_used = 0;
-	} else {
-		state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFFFF << shift_bits)) | ((uint32_t)(0x80) << shift_bits);
-		state->buffer_bytes_used += shift_bytes;
 	}
+
+	/* Fill all but the last eight bytes with 0s */
 	while(state->buffer_bytes_used < BUFFER_FULL - 8) {
 		state->buffer[(state->buffer_bytes_used + 3)/ 4] = 0;
 		state->buffer_bytes_used += 4;
 	}
+
+	/* Put state->bit_len in the last eight bytes */
 	state->buffer[SHA256_BUFFER_SIZE - 2] = (uint32_t)(state->bit_len >> 32);
 	state->buffer[SHA256_BUFFER_SIZE - 1] = (uint32_t)(state->bit_len);
 	state->buffer_bytes_used = BUFFER_FULL;
 
 	sha256_transform(state);
 
+	/* Copy the digest into hash[] */
 	int i;
 	for (i = 0; i < SHA256_DIGEST_SIZE; i++) {
 		uint8_t offset = i * 4;
