@@ -133,20 +133,20 @@ void sha256_update(sha256_state *state, const uint8_t data[], int len)
 void sha256_final(sha256_state *state, uint8_t hash[])
 {	
 	state->bit_len += state->buffer_bytes_used * 8;
-	uint8_t shift_amount = 3 - (state->buffer_bytes_used % 4);
-	shift_amount *= 8;
-	if (state->buffer_bytes_used + 9 > BUFFER_FULL) {
-		state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFFFF << shift_amount)) | ((uint32_t)(0x80) << shift_amount);
-		state->buffer_bytes_used += shift_amount;
-		while(state->buffer_bytes_used < BUFFER_FULL - 8) {
+	uint8_t shift_bytes = 3 - (state->buffer_bytes_used % 4);
+	uint8_t shift_bits = shift_bytes * 8;
+	if (state->buffer_bytes_used + 9 > 64) {
+		state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFFFF << shift_bits)) | ((uint32_t)(0x80) << shift_bits);
+		state->buffer_bytes_used += shift_bytes + 1;
+		while(state->buffer_bytes_used < 64) {
 			state->buffer[(state->buffer_bytes_used + 3)/ 4] = 0;
 			state->buffer_bytes_used += 4;
 		}
 		sha256_transform(state);
 		state->buffer_bytes_used = 0;
 	} else {
-		state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFFFF << shift_amount)) | ((uint32_t)(0x80) << shift_amount);
-		state->buffer_bytes_used += shift_amount;
+		state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFFFF << shift_bits)) | ((uint32_t)(0x80) << shift_bits);
+		state->buffer_bytes_used += shift_bytes;
 	}
 	while(state->buffer_bytes_used < BUFFER_FULL - 8) {
 		state->buffer[(state->buffer_bytes_used + 3)/ 4] = 0;
