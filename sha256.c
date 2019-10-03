@@ -27,6 +27,9 @@
 #define SIG0(x) (ROTRIGHT(x,7) ^ ROTRIGHT(x,18) ^ ((x) >> 3))
 #define SIG1(x) (ROTRIGHT(x,17) ^ ROTRIGHT(x,19) ^ ((x) >> 10))
 
+#define INDEX8(ind, i) ((ind + i) & 0x7)
+#define INDEX16(i) ((i) & 0xF)
+
 /**************************** Algorithm Constants ***********************/
 static const uint32_t k[NUM_ROUNDS] = {
 	0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
@@ -56,51 +59,32 @@ static const uint32_t init_digest[SHA256_DIGEST_SIZE] = {
 
 void sha256_transform(sha256_state *state)
 {
+	uint32_t a[8], t1, t2, w[16];
+  uint8_t  i, index;
 
-  /* Improve the efficiency of this code.
-    1. Reduce memory usage by re-cycling w values
-    2. Find a way to reduce copying (lines 83-90)
-    
-    Consider re-ordering some code
-  */ 
-	uint32_t a, b, c, d, e, f, g, h, t1, t2, w[NUM_ROUNDS];
-  uint8_t  i;
+	index = 0;
+	for (i = 0; i < 8; ++i)
+		a[INDEX8(index, i)] = state->digest[i];
 
-	for (i = 0; i < 16; ++i)
+	for (i = 0; i < 16; ++i) {
 		w[i] = state->buffer[i];
-	for ( ; i < 64; ++i)
-		w[i] = SIG1(w[i - 2]) + w[i - 7] + SIG0(w[i - 15]) + w[i - 16];
-
-	a = state->digest[0];
-	b = state->digest[1];
-	c = state->digest[2];
-	d = state->digest[3];
-	e = state->digest[4];
-	f = state->digest[5];
-	g = state->digest[6];
-	h = state->digest[7];
-
-	for (i = 0; i < 64; ++i) {
-		t1 = h + EP1(e) + CH(e,f,g) + k[i] + w[i];
-		t2 = EP0(a) + MAJ(a,b,c);
-		h = g;
-		g = f;
-		f = e;
-		e = d + t1;
-		d = c;
-		c = b;
-		b = a;
-		a = t1 + t2;
+		t1 = a[INDEX8(index, 7)] + EP1(a[INDEX8(index, 4)]) + CH(a[INDEX8(index, 4)],a[INDEX8(index, 5)],a[INDEX8(index, 6)]) + k[i] + w[i];
+		t2 = EP0(a[INDEX8(index, 0)]) + MAJ(a[INDEX8(index, 0)],a[INDEX8(index, 1)],a[INDEX8(index, 2)]);
+		index--;
+		a[INDEX8(index, 4)] += t1;
+		a[INDEX8(index, 0)] = t1 + t2;
+	}
+	for (; i < 64; ++i) {
+		w[INDEX16(i)] = SIG1(w[INDEX16(i - 2)]) + w[INDEX16(i - 7)] + SIG0(w[INDEX16(i - 15)]) + w[INDEX16(i - 16)];
+		t1 = a[INDEX8(index, 7)] + EP1(a[INDEX8(index, 4)]) + CH(a[INDEX8(index, 4)],a[INDEX8(index, 5)],a[INDEX8(index, 6)]) + k[i] + w[INDEX16(i)];
+		t2 = EP0(a[INDEX8(index, 0)]) + MAJ(a[INDEX8(index, 0)],a[INDEX8(index, 1)],a[INDEX8(index, 2)]);
+		index--;
+		a[INDEX8(index, 4)] += t1;
+		a[INDEX8(index, 0)] = t1 + t2;
 	}
 
-	state->digest[0] += a;
-	state->digest[1] += b;
-	state->digest[2] += c;
-	state->digest[3] += d;
-	state->digest[4] += e;
-	state->digest[5] += f;
-	state->digest[6] += g;
-	state->digest[7] += h;
+	for (i = 0; i < 8; ++i)
+		state->digest[i] += a[INDEX8(index, i)];
 }
 
 void sha256_init(sha256_state *state)
