@@ -93,7 +93,7 @@ void sha256_init(sha256_state *state)
 	state->bit_len = 0;
 
   int i;
-  for (i=0; i<SHA256_DIGEST_SIZE; i++)
+  for (i=0; i<SHA256_DIGEST_SIZE; ++i)
   	state->digest[i] = init_digest[i];
 }
 
@@ -151,7 +151,7 @@ void sha256_final(sha256_state *state, uint8_t hash[])
 
 	/* Copy the digest into hash[] */
 	int i;
-	for (i = 0; i < SHA256_DIGEST_SIZE; i++) {
+	for (i = 0; i < SHA256_DIGEST_SIZE; ++i) {
 		uint8_t offset = i * 4;
 		hash[offset] = (uint8_t)(state->digest[i] >> 24);
 		hash[offset + 1] = (uint8_t)(state->digest[i] >> 16);

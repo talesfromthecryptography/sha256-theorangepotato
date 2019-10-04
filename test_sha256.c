@@ -13,15 +13,15 @@
 /*********************** Implementations ***********************/
 int assert_equal_hash(uint8_t * computed_hash, uint8_t * known_hash) {
     int i;
-    for (i = 0; i < 32; i++) {
+    for (i = 0; i < 32; ++i) {
         if (computed_hash[i] != known_hash[i]) {
             printf("TEST FAILED\nHashes do not match!\nComputed hash: ");
             int j;
-            for (j = 0; j < 32; j++) {
+            for (j = 0; j < 32; ++j) {
                 printf("%02x", computed_hash[j]);
             }
             printf("\nKnown hash: ");
-            for (j = 0; j < 32; j++) {
+            for (j = 0; j < 32; ++j) {
                 printf("%02x", known_hash[j]);
             }
             printf("\n");
