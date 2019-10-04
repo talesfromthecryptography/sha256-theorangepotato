@@ -102,9 +102,9 @@ void sha256_update(sha256_state *state, const uint8_t data[], int len)
 	int i;
 	uint8_t shift_amount;
 	for (i = 0; i < len; ++i) {
-		shift_amount = 3 - (state->buffer_bytes_used % 4); /* bytes */
+		shift_amount = 3 - (state->buffer_bytes_used & 0x3); /* bytes */
 		shift_amount *= 8; /* bits */
-		state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFFFF << shift_amount)) | ((uint32_t)data[i] << shift_amount);
+		state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFF00 << shift_amount)) | ((uint32_t)data[i] << (shift_amount));
 		state->buffer_bytes_used++;
 
 		if (state->buffer_bytes_used == BUFFER_FULL) {
@@ -123,7 +123,7 @@ void sha256_final(sha256_state *state, uint8_t hash[])
 	state->bit_len += state->buffer_bytes_used * 8;
 
 	/* Append a 1-bit for padding */
-	state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFFFF << shift_bits)) | ((uint32_t)(0x80) << shift_bits);
+	state->buffer[state->buffer_bytes_used / 4] = (state->buffer[state->buffer_bytes_used / 4] & ((uint32_t)0xFFFFFF00 << shift_bits)) | ((uint32_t)(0x80) << shift_bits);
 	state->buffer_bytes_used += shift_bytes + 1;
 
 	/* The padding will overflow the buffer */
